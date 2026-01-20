@@ -1,7 +1,6 @@
-import React, {
+import {
   useCallback,
   useEffect,
-  useRef,
   useState,
   type ReactElement,
 } from 'react';

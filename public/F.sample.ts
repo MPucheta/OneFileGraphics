@@ -1,6 +1,7 @@
 // @ts-nocheck
 
-const deg = 110;
+const CHANGE_FOV_AND_RUN = 110;
+
 const mat4 = {
   perspective(fieldOfViewYInRadians, aspect, zNear, zFar, dst) {
     dst = dst || new Float32Array(16);
@@ -512,7 +513,7 @@ async function main() {
   const degToRad = (d) => (d * Math.PI) / 180;
 
   const settings = {
-    fieldOfView: degToRad(deg),
+    fieldOfView: degToRad(CHANGE_FOV_AND_RUN),
     translation: [35, 0, -120],
     rotation: [degToRad(220), degToRad(25), degToRad(325)],
     scale: [1, 1, 1],
