@@ -63,11 +63,11 @@ async function executeCode (
       if (evalResult instanceof Promise) {
         try {
           const resolved = await evalResult;
-          if (resolved === null || resolved === undefined) {
+          if (resolved == null) {
             return '';
           }
           if (typeof resolved === 'object') {
-            return JSON.stringify(resolved, null, 2);
+            return JSON.stringify(resolved);
           }
           return String(resolved);
         } catch (error: any) {
@@ -75,11 +75,11 @@ async function executeCode (
         }
       }
 
-      if (evalResult === null || evalResult === undefined) {
+      if (evalResult == null) {
         return '';
       }
       if (typeof evalResult === 'object') {
-        return JSON.stringify(evalResult, null, 2);
+        return JSON.stringify(evalResult);
       }
       return String(evalResult);
     }

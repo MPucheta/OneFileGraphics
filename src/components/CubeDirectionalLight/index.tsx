@@ -1,6 +1,3 @@
-
-
-import { useEffect } from 'react';
 import CanvasWithEditor from '../CanvasWithEditor'
 import BackNavigation from '../BackNavigation';
 
