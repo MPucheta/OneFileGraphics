@@ -4,7 +4,6 @@ import {
   useState,
   type ReactElement,
 } from 'react';
-
 import { Editor } from '@monaco-editor/react';
 
 type Props = {
@@ -13,7 +12,7 @@ type Props = {
   saveCode: (code: string) => void;
 };
 
-function CodeEditor({ code, saveCode, onSubmit }: Props): ReactElement {
+function CodeEditor ({ code, saveCode, onSubmit }: Props): ReactElement {
   const [editorCode, setEditorCode] = useState(code);
 
   const onCodeChange = useCallback(
