@@ -1,7 +1,7 @@
 const RouteMap = {
-  DASHBOARD: '/OneFileGraphics',
-  F_MATRIX_PERSPECTIVE: '/OneFileGraphics/f-matrix-perspective',
-  CUBE_DIRECTIONAL_LIGHT: '/OneFileGraphics/cube-directional-light'
+  DASHBOARD: '/',
+  F_MATRIX_PERSPECTIVE: '/f-matrix-perspective',
+  CUBE_DIRECTIONAL_LIGHT: '/cube-directional-light'
 }
 
 export default RouteMap;

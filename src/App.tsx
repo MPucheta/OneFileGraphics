@@ -7,7 +7,7 @@ import RouteMap from './constants/routes';
 
 function App () {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL} >
       <Routes>
         <Route path={RouteMap.DASHBOARD} element={<Dashboard />} />
         <Route path={RouteMap.F_MATRIX_PERSPECTIVE} element={<FSample />} />

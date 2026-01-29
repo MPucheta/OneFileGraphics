@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import RouteMap from "../../constants/routes";
+import assetPath from "../../utils/assetPath";
 
 type Props = { title: string, description: string, image: string | null, video: string | null, onClick: () => void }
 
@@ -47,8 +48,8 @@ function Dashboard () {
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 p-[24px]">
-      <SampleCard title="Matrix Transformation & Perspective" description="Matrix Transformation" image={"samplePreview/f.jpg"} video={"samplePreview/f.mp4"} onClick={() => navigate(RouteMap.F_MATRIX_PERSPECTIVE)} />
-      <SampleCard title="Directional Light" description="Directional Light" image={'samplePreview/cube-directional-light.jpg'} video={'samplePreview/cube-directional-light.mp4'} onClick={() => navigate(RouteMap.CUBE_DIRECTIONAL_LIGHT)} />
+      <SampleCard title="Matrix Transformation & Perspective" description="Matrix Transformation" image={assetPath('samplePreview/f.jpg')} video={assetPath('samplePreview/f.mp4')} onClick={() => navigate(RouteMap.F_MATRIX_PERSPECTIVE)} />
+      <SampleCard title="Directional Light" description="Directional Light" image={assetPath('samplePreview/cube-directional-light.jpg')} video={assetPath('samplePreview/cube-directional-light.mp4')} onClick={() => navigate(RouteMap.CUBE_DIRECTIONAL_LIGHT)} />
     </div>
   )
 }
