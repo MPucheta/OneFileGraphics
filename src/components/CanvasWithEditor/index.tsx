@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react';
 import useCode from '../../hooks/useCode';
 import CodeEditor from '../CodeEditor';
 import executeCode from '../../utils/executeCode';
@@ -8,12 +8,12 @@ type Props = {
   cacheKey: string;
   codePath: string;
   canvasId: string;
-}
+};
 
 /**
  * Renders a canvas along with an editor to showcase a 3D sample
  * @param props: { cacheKey: string, codePath: string, canvasId: string }
- * @returns 
+ * @returns
  */
 function CanvasWithEditor ({ cacheKey, codePath, canvasId }: Props) {
   const { code, setCode } = useCode(cacheKey, codePath);
@@ -31,15 +31,15 @@ function CanvasWithEditor ({ cacheKey, codePath, canvasId }: Props) {
   useEffect(() => {
     return () => {
       document.querySelector('muigui-element')?.remove();
-    }
-  }, [])
+    };
+  }, []);
 
   useEffect(() => {
     if (code.trim()) {
       requestAnimationFrame(() => {
         if (!initialized.current) {
           initialized.current = true;
-          executeCode(code, true, canvasId)
+          executeCode(code, false, canvasId)
             .then(setConsoleOutput)
             .catch((err) => setConsoleOutput(`Error: ${err.message}`));
         }
@@ -53,11 +53,17 @@ function CanvasWithEditor ({ cacheKey, codePath, canvasId }: Props) {
         <CodeEditor code={code} onSubmit={onSubmit} saveCode={setCode} />
       </div>
       <div className="flex flex-col px-[8px] justify-between">
-        <canvas key={canvasKey} id={'3dCanvas'} width={600} height={550} />
+        <canvas
+          key={canvasKey}
+          id={'3dCanvas'}
+          width={600}
+          height={550}
+          className="border border-gray-700 rounded-[8px]"
+        />
         <ConsoleOutput consoleOutput={consoleOutput} />
       </div>
     </div>
   );
 }
 
-export default CanvasWithEditor
+export default CanvasWithEditor;
