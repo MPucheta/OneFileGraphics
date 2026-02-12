@@ -50,6 +50,7 @@ function Dashboard () {
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 p-[24px]">
       <SampleCard title="Matrix Transformation & Perspective" description="Matrix Transformation" image={assetPath('samplePreview/f.jpg')} video={assetPath('samplePreview/f.mp4')} onClick={() => navigate(RouteMap.F_MATRIX_PERSPECTIVE)} />
       <SampleCard title="Directional Light" description="Directional Light" image={assetPath('samplePreview/cube-directional-light.jpg')} video={assetPath('samplePreview/cube-directional-light.mp4')} onClick={() => navigate(RouteMap.CUBE_DIRECTIONAL_LIGHT)} />
+      <SampleCard title="Camera Input Control" description="Camera Input Control" image={assetPath('samplePreview/camera-input-control.jpg')} video={assetPath('samplePreview/camera-input-control.mp4')} onClick={() => navigate(RouteMap.CAMERA_INPUT_CONTROL)} />
     </div>
   )
 }
