@@ -2,7 +2,8 @@ const RouteMap = {
   DASHBOARD: '/',
   F_MATRIX_PERSPECTIVE: '/f-matrix-perspective',
   CUBE_DIRECTIONAL_LIGHT: '/cube-directional-light',
-  CAMERA_INPUT_CONTROL: '/camera-input-control'
+  CAMERA_INPUT_CONTROL: '/camera-input-control',
+  SHADER_FRACTAL: '/shader-fractal',
 }
 
 export default RouteMap;

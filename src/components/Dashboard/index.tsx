@@ -1,60 +1,46 @@
-import { useNavigate } from "react-router-dom";
-import RouteMap from "../../constants/routes";
-import assetPath from "../../utils/assetPath";
-
-type Props = { title: string, description: string, image: string | null, video: string | null, onClick: () => void }
-
-function SampleCard ({ title, description, image, video, onClick }: Props) {
-  return (
-    <div
-      onClick={onClick}
-      className="group cursor-pointer overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900 transition-all hover:border-zinc-700"
-    >
-      <div className="relative aspect-video w-[350px] overflow-hidden bg-zinc-950">
-        {image ? (
-          <>
-            <img
-              src={image}
-              alt={title}
-              className="h-full w-full object-fit group-hover:hidden"
-            />
-            <div className="relative h-full w-full overflow-hidden">
-              <video
-                src={video ?? undefined}
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="hidden w-full object-cover group-hover:block"
-              />
-            </div>
-          </>
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-zinc-800 text-xs text-zinc-500">
-            No Preview
-          </div>
-        )}
-      </div>
-      <div className="p-3">
-        <h3 className="text-sm font-medium text-zinc-100">{title}</h3>
-        <p className="mt-1 text-xs text-zinc-500 line-clamp-2">{description}</p>
-      </div>
-    </div>
-  );
-}
+import { useNavigate } from 'react-router-dom';
+import RouteMap from '../../constants/routes';
+import assetPath from '../../utils/assetPath';
+import SampleCard from '../SampleCard';
+import CanvasCard from '../CanvasCard';
 
 function Dashboard () {
   const navigate = useNavigate();
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 p-[24px]">
-      <SampleCard title="Matrix Transformation & Perspective" description="Matrix Transformation" image={assetPath('samplePreview/f.jpg')} video={assetPath('samplePreview/f.mp4')} onClick={() => navigate(RouteMap.F_MATRIX_PERSPECTIVE)} />
-      <SampleCard title="Directional Light" description="Directional Light" image={assetPath('samplePreview/cube-directional-light.jpg')} video={assetPath('samplePreview/cube-directional-light.mp4')} onClick={() => navigate(RouteMap.CUBE_DIRECTIONAL_LIGHT)} />
-      <SampleCard title="Camera Input Control" description="Camera Input Control" image={assetPath('samplePreview/camera-input-control.jpg')} video={assetPath('samplePreview/camera-input-control.mp4')} onClick={() => navigate(RouteMap.CAMERA_INPUT_CONTROL)} />
+      <SampleCard
+        title="Matrix Transformation & Perspective"
+        description="Matrix Transformation"
+        image={assetPath('samplePreview/f.jpg')}
+        video={assetPath('samplePreview/f.mp4')}
+        onClick={() => navigate(RouteMap.F_MATRIX_PERSPECTIVE)}
+      />
+      <SampleCard
+        title="Directional Light"
+        description="Directional Light"
+        image={assetPath('samplePreview/cube-directional-light.jpg')}
+        video={assetPath('samplePreview/cube-directional-light.mp4')}
+        onClick={() => navigate(RouteMap.CUBE_DIRECTIONAL_LIGHT)}
+      />
+      <SampleCard
+        title="Camera Input Control"
+        description="Camera Input Control"
+        image={assetPath('samplePreview/camera-input-control.jpg')}
+        video={assetPath('samplePreview/camera-input-control.mp4')}
+        onClick={() => navigate(RouteMap.CAMERA_INPUT_CONTROL)}
+      />
+      <CanvasCard
+        title="Shader Fractal"
+        description="Shader Fractal"
+        image={assetPath('samplePreview/shader-fractal.jpg')}
+        onClick={() => navigate(RouteMap.SHADER_FRACTAL)}
+        cacheKey='shader-fractal-cache-key'
+        codePath={assetPath('shaderFractal.sample.ts')}
+        canvasId='shaderFractal'
+      />
     </div>
-  )
+  );
 }
 
 export default Dashboard;
-
-
