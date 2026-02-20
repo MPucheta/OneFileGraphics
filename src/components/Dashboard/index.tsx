@@ -30,7 +30,6 @@ function Dashboard () {
         video={assetPath('samplePreview/camera-input-control.mp4')}
         onClick={() => navigate(RouteMap.CAMERA_INPUT_CONTROL)}
       />
-      {/* <SampleCard title="Shader Fractal" description="Shader Fractal" image={assetPath('samplePreview/shader-fractal.jpg')} video={assetPath('samplePreview/shader-fractal.mp4')} onClick={() => navigate(RouteMap.SHADER_FRACTAL)} /> */}
       <CanvasCard
         title="Shader Fractal"
         description="Shader Fractal"

@@ -12,7 +12,6 @@ type Props = {
   codePath: string;
 };
 
-
 export default function CanvasCard ({
   title,
   description,
