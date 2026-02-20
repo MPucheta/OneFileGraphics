@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route } from 'react-router-dom';
 import './App.css';
 import CubeDirectionalLight from './components/CubeDirectionalLight';
 import FSample from './components/FSample';
@@ -8,12 +8,8 @@ import CameraInputControl from './components/CameraInputControl';
 import ShaderFractal from './components/ShaderFractal';
 
 function App () {
-  const basename = import.meta.env.PROD
-    ? new URL(import.meta.env.BASE_URL).pathname
-    : '/OneFileGraphics';
-
   return (
-    <BrowserRouter basename={basename} >
+    <HashRouter>
       <Routes>
         <Route path={RouteMap.DASHBOARD} element={<Dashboard />} />
         <Route path={RouteMap.F_MATRIX_PERSPECTIVE} element={<FSample />} />
@@ -21,7 +17,7 @@ function App () {
         <Route path={RouteMap.CAMERA_INPUT_CONTROL} element={<CameraInputControl />} />
         <Route path={RouteMap.SHADER_FRACTAL} element={<ShaderFractal />} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
