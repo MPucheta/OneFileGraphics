@@ -15,7 +15,7 @@ async function executeCode (
       /globalThis\s*\./i,
       /Function\s*\(/i,
       /new\s+Function/i,
-      /fetch\s*\(/i,
+      // /fetch\s*\(/i,
       /XMLHttpRequest/i,
     ];
     for (const pattern of forbiddenPatterns) {
@@ -34,7 +34,7 @@ async function executeCode (
       filename: './index.tsx',
     }).code as string;
 
-    let result: string[] = [];
+    const result: string[] = [];
 
     if (showConsole) {
       const fakeConsole = {

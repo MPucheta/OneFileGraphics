@@ -6,6 +6,7 @@ import Dashboard from './components/Dashboard';
 import RouteMap from './constants/routes';
 import CameraInputControl from './components/CameraInputControl';
 import ShaderFractal from './components/ShaderFractal';
+import ModelLoading from './components/ModelLoading';
 
 function App () {
   return (
@@ -16,6 +17,7 @@ function App () {
         <Route path={RouteMap.CUBE_DIRECTIONAL_LIGHT} element={<CubeDirectionalLight />} />
         <Route path={RouteMap.CAMERA_INPUT_CONTROL} element={<CameraInputControl />} />
         <Route path={RouteMap.SHADER_FRACTAL} element={<ShaderFractal />} />
+        <Route path={RouteMap.MODEL_LOADING} element={<ModelLoading />} />
       </Routes>
     </HashRouter>
   );

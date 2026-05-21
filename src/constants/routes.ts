@@ -4,6 +4,7 @@ const RouteMap = {
   CUBE_DIRECTIONAL_LIGHT: '/cube-directional-light',
   CAMERA_INPUT_CONTROL: '/camera-input-control',
   SHADER_FRACTAL: '/shader-fractal',
+  MODEL_LOADING: '/model-loading',
 }
 
 export default RouteMap;
