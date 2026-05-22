@@ -22,6 +22,13 @@ function setupGUIControls () {
 const controls = setupGUIControls();
 
 async function loadGLB () {
+  const uploadedData = (window as any).uploadedGLB;
+
+  if (uploadedData) {
+    return parseGLB(uploadedData);
+  }
+
+  // Fallback to default monkey model
   const response = await fetch('models/monkey.glb');
 
   if (!response.ok) {
@@ -434,7 +441,7 @@ async function main () {
     }
 
 
-    function positionObjects () {
+    function positionObjects (sceneViewProjectionMatrix) {
       for (const objInfo of objectInfos) {
         const { uniformBuffer, uniformValues, bindGroup, colorValue, lightDirectionValue, normalMatrixValue, worldViewProjectionValue } = objInfo;
 
@@ -457,7 +464,7 @@ async function main () {
       }
     }
 
-    function positionLight () {
+    function positionLight (sceneViewProjectionMatrix) {
       for (const objInfo of lightInfo) {
         const { uniformBuffer, uniformValues, bindGroup, colorValue, lightDirectionValue, normalMatrixValue, worldViewProjectionValue } = objInfo;
 
@@ -478,9 +485,9 @@ async function main () {
       }
     }
 
-    const sceneViewProjectionMatrix = positionCameraLookingAtScene()
-    positionObjects();
-    positionLight();
+    const scene = positionCameraLookingAtScene()
+    positionObjects(scene);
+    positionLight(scene);
 
     renderPass.end();
     device.queue.submit([encoder.finish()]);
