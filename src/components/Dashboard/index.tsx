@@ -39,6 +39,13 @@ function Dashboard () {
         codePath={assetPath('shaderFractal.sample.ts')}
         canvasId='shaderFractal'
       />
+      <SampleCard
+        title="Model Loading"
+        description="Model Loading"
+        image={assetPath('samplePreview/model-loading.jpg')}
+        video={assetPath('samplePreview/model-loading.mp4')}
+        onClick={() => navigate(RouteMap.MODEL_LOADING)}
+      />
     </div>
   );
 }

@@ -26,6 +26,7 @@ export default defineConfig([
           'ts-nocheck': false,
         },
       ],
+      "@typescript-eslint/no-explicit-any": "off"
     },
   },
 ])

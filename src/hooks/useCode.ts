@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
+import { isDev } from "../featureFlag/isDEV";
+
 
 const useCode = (cacheKey: string, filePath: string) => {
   const [code, setCodeLocal] = useState(() => localStorage.getItem(cacheKey) || '');
@@ -6,10 +8,10 @@ const useCode = (cacheKey: string, filePath: string) => {
   const setCode = useCallback((code: string) => {
     localStorage.setItem(cacheKey, code);
     setCodeLocal(code);
-  }, []);
+  }, [cacheKey]);
 
   useEffect(() => {
-    const existingCode = localStorage.getItem(cacheKey);
+    const existingCode = !isDev ? localStorage.getItem(cacheKey) : null;
 
     if (existingCode) {
       setCode(existingCode);
@@ -28,7 +30,7 @@ const useCode = (cacheKey: string, filePath: string) => {
           console.error('Error fetching the file:', error);
         });
     }
-  }, []);
+  }, [cacheKey, filePath, setCode]);
 
   return {
     code,
