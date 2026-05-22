@@ -4,8 +4,8 @@ const degToRad = (d) => (d * Math.PI) / 180;
 
 function setupGUIControls () {
   const controls = {
-    rotation: [degToRad(0), degToRad(0), degToRad(0)],
-    scale: [25, 25, 25],
+    rotation: [degToRad(0), -60, degToRad(0)],
+    scale: [50, 50, 50],
     lightScale: [0, 0, 0],
     lightPosition: [50, 100, 50]
   };
@@ -21,9 +21,176 @@ function setupGUIControls () {
 
 const controls = setupGUIControls();
 
-async function main () {
-  await loadGLB();
+async function loadGLB () {
+  const response = await fetch('models/monkey.glb');
 
+  if (!response.ok) {
+    throw new Error(`Failed to fetch model: ${response.status} ${response.statusText}`);
+  }
+
+  const arrayBuffer = await response.arrayBuffer();
+  const data = new Uint8Array(arrayBuffer);
+  const parsed = parseGLB(data);
+
+  return parsed;
+}
+
+function parseGLB (data: Uint8Array) {
+  // DataView allows better manipulation of BufferData
+  const dataView = new DataView(data.buffer, data.byteOffset, data.byteLength);
+  const GLTX_HEX = 0x46546C67; // 'glTF' x46 = g, x54 = l, ...
+  const JSON_HEX = 0x4E4F534A;
+  const BIN_HEX = 0x004E4942;
+
+  const magic = dataView.getUint32(0, true);
+
+  if (magic !== GLTX_HEX) {
+    throw new Error(`Invalid GLB magic value (${magic}). Expected 1179937895 (0x46546C67).`);
+  }
+
+  const offsetToLengthAmount = 8; // 0x46546C67 => 8
+  const totalLength = dataView.getUint32(offsetToLengthAmount, true);
+
+  let offset = 12;
+  let jsonChunk = null;
+  let binaryChunk = null;
+
+  function chunk (data, dataView, offset) {
+    const chunkLength = dataView.getUint32(offset, true); // 4 bytes that tells data length
+    const chunkType = dataView.getUint32(offset + 4, true); // 4 bytes of data type either JSONHEX or BINHEX
+    const chunkData = data.subarray(offset + 8, offset + 8 + chunkLength); // actual data after headers
+
+    return { chunkLength, chunkType, chunkData };
+  }
+
+  const parseJSONChunk = (chunkData) => JSON.parse(new TextDecoder().decode(chunkData))
+  const parseBinaryChunk = (chunkData) => chunkData // no-op
+
+  while (offset < totalLength) {
+    const { chunkLength, chunkType, chunkData } = chunk(data, dataView, offset);
+
+    if (chunkType === JSON_HEX) jsonChunk = parseJSONChunk(chunkData);
+    if (chunkType === BIN_HEX) binaryChunk = parseBinaryChunk(chunkData);
+
+    offset += 8 + chunkLength;
+  }
+
+  if (!jsonChunk || !binaryChunk) {
+    throw new Error('Missing GLB chunks');
+  }
+
+  const mesh = jsonChunk.meshes[0];
+  const primitive = mesh.primitives[0];
+  const attributes = primitive.attributes;
+
+  function getAccessorData (accessorIndex) {
+    const accessor = jsonChunk.accessors[accessorIndex];
+
+    if (!accessor) return null;
+
+    const ChunkHandler = {
+      5126: {
+        name: 'FLOAT',
+        numberOfBytes: 4,
+        dataViewGetterMethod: 'getFloat32',
+        ArrayView: Float32Array
+      },
+      5123: {
+        name: 'UNSIGNED_SHORT',
+        numberOfBytes: 2,
+        dataViewGetterMethod: 'getUint16',
+        ArrayView: Uint16Array
+      },
+      5125: {
+        name: 'UNSIGNED_INT',
+        numberOfBytes: 4,
+        dataViewGetterMethod: 'getUint32',
+        ArrayView: Uint32Array
+      },
+      5121: {
+        name: 'UNSIGNED_BYTE',
+        numberOfBytes: 1,
+        dataViewGetterMethod: 'getUint8',
+        ArrayView: Uint8Array
+      }
+    }
+
+
+    const bufferView = jsonChunk.bufferViews[accessor.bufferView];
+    const byteOffset = (bufferView.byteOffset || 0) + (accessor.byteOffset || 0);
+    const byteStride = bufferView.byteStride || 0;
+    const type = accessor.type;
+    const numVertices = accessor.count;
+    const vectorSize = type === 'VEC3' ? 3 : (type === 'VEC2' ? 2 : 1);
+
+
+    // abstraction of the following, with more specs
+    // if (componentType === FLOAT) {
+    //   result = new Float32Array(count * itemSize);
+    //   for (let i = 0; i < count; i++) {
+    //     const itemOffset = byteOffset + i * (byteStride || itemSize * 4);
+    //     for (let j = 0; j < itemSize; j++) {
+    //       result[i * itemSize + j] = dataView.getFloat32(binaryChunk.byteOffset + itemOffset + j * 4, true);
+    //     }
+    //   }
+    // }
+
+    const SPECS = ChunkHandler[accessor.componentType]
+    const result = new SPECS.ArrayView(numVertices * vectorSize);
+
+    // go through all vertices, each vertex may be 1D, 2D or 3D, and have specific number of bytes
+    for (let i = 0; i < numVertices; i++) {
+      const itemOffset = byteOffset + i * (byteStride || vectorSize * SPECS.numberOfBytes);
+      for (let j = 0; j < vectorSize; j++) {
+        result[i * vectorSize + j] = dataView[SPECS.dataViewGetterMethod](binaryChunk.byteOffset + itemOffset + j * SPECS.numberOfBytes, true);
+      }
+    }
+
+    return result;
+  }
+
+  const positions = getAccessorData(attributes.POSITION);
+  const normals = getAccessorData(attributes.NORMAL);
+  const indices = getAccessorData(primitive.indices);
+
+
+  // interleave => [Px, Py, Pz, Nx, Ny, Nz], that is, position and normals are side by side
+
+  if (indices) {
+    const numVertices = indices.length;
+    const vertexData = new Float32Array(numVertices * 6);
+
+    for (let i = 0; i < numVertices; i++) {
+      // if indices => drawIndexed allowed
+      // Interleave Position and Normal
+      const idx = indices[i];
+      vertexData[i * 6 + 0] = positions[idx * 3 + 0];
+      vertexData[i * 6 + 1] = positions[idx * 3 + 1];
+      vertexData[i * 6 + 2] = positions[idx * 3 + 2];
+
+      vertexData[i * 6 + 3] = normals[idx * 3 + 0];
+      vertexData[i * 6 + 4] = normals[idx * 3 + 1];
+      vertexData[i * 6 + 5] = normals[idx * 3 + 2];
+    }
+    return { vertexData, numVertices };
+  } else {
+    const numVertices = positions.length / 3;
+    const vertexData = new Float32Array(numVertices * 6);
+    // Interleave Position and Normal sequentially => more vertex count for the same stuff, but simpler
+    for (let i = 0; i < numVertices; i++) {
+      vertexData[i * 6 + 0] = positions[i * 3 + 0];
+      vertexData[i * 6 + 1] = positions[i * 3 + 1];
+      vertexData[i * 6 + 2] = positions[i * 3 + 2];
+
+      vertexData[i * 6 + 3] = normals[i * 3 + 0];
+      vertexData[i * 6 + 4] = normals[i * 3 + 1];
+      vertexData[i * 6 + 5] = normals[i * 3 + 2];
+    }
+    return { vertexData, numVertices };
+  }
+}
+
+async function main () {
   const canvas = document.getElementById('3dCanvas');
 
   const gpu = navigator.gpu;
@@ -212,7 +379,7 @@ async function main () {
   const objectInfos = allocMemoryForObject();
   const lightInfo = allocMemoryForObject();
 
-  function render (timestamp) {
+  function render () {
     const encoder = device.createCommandEncoder();
     const texture = context.getCurrentTexture();
 
@@ -321,11 +488,7 @@ async function main () {
     requestAnimationFrame(render);
   }
 
-
-
   requestAnimationFrame(render);
-
-
 }
 
 const VectorMath = {
@@ -707,180 +870,6 @@ function assert (element: any) {
     throw new Error('Required element not found');
   }
 }
-
-
-function parseGLB2 (data: Uint8Array) {
-  const dataView = new DataView(data.buffer, data.byteOffset, data.byteLength);
-
-  // 1. Header (12 bytes)
-  const magic = dataView.getUint32(0, true);
-  if (magic !== 0x46546C67) { // 'glTF'
-    throw new Error(`GLB_INVALID_MAGIC: Invalid GLB magic value (${magic}). Expected 1179937895 (0x46546C67).`);
-  }
-
-  const totalLength = dataView.getUint32(8, true);
-
-  // 2. Chunks
-  let offset = 12;
-  let jsonChunk = null;
-  let binaryChunk = null;
-
-  while (offset < totalLength) {
-    const chunkLength = dataView.getUint32(offset, true);
-    const chunkType = dataView.getUint32(offset + 4, true);
-    const chunkData = data.subarray(offset + 8, offset + 8 + chunkLength);
-
-    if (chunkType === 0x4E4F534A) { // "JSON"
-      const jsonText = new TextDecoder().decode(chunkData);
-      jsonChunk = JSON.parse(jsonText);
-    } else if (chunkType === 0x004E4942) { // "BIN"
-      binaryChunk = chunkData;
-    }
-
-    offset += 8 + chunkLength;
-  }
-
-  if (!jsonChunk || !binaryChunk) {
-    throw new Error('Missing GLB chunks');
-  }
-
-  // 3. Find first mesh primitive
-  const mesh = jsonChunk.meshes[0];
-  const primitive = mesh.primitives[0];
-  const attributes = primitive.attributes;
-
-  function getAccessorData (accessorIndex) {
-    const accessor = jsonChunk.accessors[accessorIndex];
-    const bufferView = jsonChunk.bufferViews[accessor.bufferView];
-    const byteOffset = (bufferView.byteOffset || 0) + (accessor.byteOffset || 0);
-    const byteStride = bufferView.byteStride || 0;
-    const type = accessor.type;
-    const count = accessor.count;
-
-    const itemSize = type === 'VEC3' ? 3 : (type === 'VEC2' ? 2 : 1);
-    const result = new Float32Array(count * itemSize);
-
-    for (let i = 0; i < count; i++) {
-      // itemOffset relative to binary chunk
-      const itemOffset = byteOffset + i * (byteStride || itemSize * 4);
-      for (let j = 0; j < itemSize; j++) {
-        result[i * itemSize + j] = dataView.getFloat32(binaryChunk.byteOffset + itemOffset + j * 4, true);
-      }
-    }
-
-    return result;
-  }
-
-  const positions = getAccessorData(attributes.POSITION);
-  const normals = getAccessorData(attributes.NORMAL);
-
-  const numVertices = positions.length / 3;
-  const vertexData = new Float32Array(numVertices * 6);
-
-  // Interleave positions and normals
-  for (let i = 0; i < numVertices; i++) {
-    vertexData[i * 6 + 0] = positions[i * 3 + 0];
-    vertexData[i * 6 + 1] = positions[i * 3 + 1];
-    vertexData[i * 6 + 2] = positions[i * 3 + 2];
-
-    vertexData[i * 6 + 3] = normals[i * 3 + 0];
-    vertexData[i * 6 + 4] = normals[i * 3 + 1];
-    vertexData[i * 6 + 5] = normals[i * 3 + 2];
-  }
-
-  return { vertexData, numVertices };
-}
-
-async function loadGLB () {
-  const response = await fetch('models/cube.glb');
-  if (!response.ok) {
-    throw new Error(`Failed to fetch model: ${response.status} ${response.statusText}`);
-  }
-  const arrayBuffer = await response.arrayBuffer();
-  const data = new Uint8Array(arrayBuffer);
-  const parsed = parseGLB2(data);
-
-  console.log(parsed)
-
-  return parsed;
-}
-
-
-function createCubeVertices () {
-  const positions = [
-    // Front (+Z)
-    -1, -1, 1,
-    1, -1, 1,
-    1, 1, 1,
-    -1, 1, 1,
-
-    // Back (-Z)
-    1, -1, -1,
-    -1, -1, -1,
-    -1, 1, -1,
-    1, 1, -1,
-
-    // Left (-X)
-    -1, -1, -1,
-    -1, -1, 1,
-    -1, 1, 1,
-    -1, 1, -1,
-
-    // Right (+X)
-    1, -1, 1,
-    1, -1, -1,
-    1, 1, -1,
-    1, 1, 1,
-
-    // Top (+Y)
-    -1, 1, 1,
-    1, 1, 1,
-    1, 1, -1,
-    -1, 1, -1,
-
-    // Bottom (-Y)
-    -1, -1, -1,
-    1, -1, -1,
-    1, -1, 1,
-    -1, -1, 1
-  ]
-
-  const indices = [
-    0, 1, 2, 0, 2, 3,   // Front
-    4, 5, 6, 4, 6, 7,   // Back
-    8, 9, 10, 8, 10, 11,   // Left
-    12, 13, 14, 12, 14, 15,   // Right
-    16, 17, 18, 16, 18, 19,   // Top
-    20, 21, 22, 20, 22, 23    // Bottom
-  ]
-  const normals = [
-    0, 0, 1, // Front (+Z)
-    0, 0, -1, // Back (-Z)
-    -1, 0, 0, // Left (-X)
-    1, 0, 0, // Right (+X)
-    0, 1, 0, // Top (+Y)
-    0, -1, 0, // Bottom (-Y)
-  ]
-
-  const numVertices = indices.length;
-
-  const vertexData = new Float32Array(numVertices * 6);
-
-  for (let i = 0; i < indices.length; ++i) {
-    const positionNdx = indices[i] * 3;
-    const position = positions.slice(positionNdx, positionNdx + 3);
-    vertexData.set(position, i * 6);
-
-    const quadNdx = (i / 6 | 0) * 3;
-    const normal = normals.slice(quadNdx, quadNdx + 3);
-    vertexData.set(normal, i * 6 + 3);
-  }
-
-  return {
-    vertexData, numVertices
-  }
-}
-
 
 
 main();
