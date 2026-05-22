@@ -5,7 +5,7 @@ const degToRad = (d) => (d * Math.PI) / 180;
 function setupGUIControls () {
   const controls = {
     rotation: [degToRad(0), -60, degToRad(0)],
-    scale: [50, 50, 50],
+    scale: 50,
     lightScale: [0, 0, 0],
     lightPosition: [50, 100, 50]
   };
@@ -15,6 +15,8 @@ function setupGUIControls () {
   gui.add(controls.rotation, '0', -360, 360).name("object rotation x");
   gui.add(controls.rotation, '1', -360, 360).name("object rotation y");
   gui.add(controls.rotation, '2', -360, 360).name("object rotation z");
+
+  gui.add(controls, 'scale', 0, 100).name("object scale");
 
   return controls;
 }
@@ -450,7 +452,7 @@ async function main () {
         VectorMath.mat4.rotateZ(world, controls.rotation[2] * 0.01, world);
 
         VectorMath.mat4.multiply(sceneViewProjectionMatrix, world, worldViewProjectionValue);
-        VectorMath.mat4.scale(worldViewProjectionValue, controls.scale, worldViewProjectionValue);
+        VectorMath.mat4.scale(worldViewProjectionValue, [controls.scale, controls.scale, controls.scale], worldViewProjectionValue);
 
         VectorMath.mat3.fromMat4(VectorMath.mat4.transpose(VectorMath.mat4.inverse(world)), normalMatrixValue)
 
