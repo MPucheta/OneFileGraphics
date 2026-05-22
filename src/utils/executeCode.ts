@@ -15,7 +15,6 @@ async function executeCode (
       /globalThis\s*\./i,
       /Function\s*\(/i,
       /new\s+Function/i,
-      // /fetch\s*\(/i,
       /XMLHttpRequest/i,
     ];
     for (const pattern of forbiddenPatterns) {
