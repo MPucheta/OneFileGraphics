@@ -15,7 +15,7 @@ type Props = {
  * @param props: { cacheKey: string, codePath: string, canvasId: string }
  * @returns
  */
-function CanvasWithEditor ({ cacheKey, codePath, canvasId }: Props) {
+function CanvasWithEditor({ cacheKey, codePath, canvasId }: Props) {
   const { code, setCode } = useCode(cacheKey, codePath);
 
   const [consoleOutput, setConsoleOutput] = useState<string>('');
@@ -45,7 +45,7 @@ function CanvasWithEditor ({ cacheKey, codePath, canvasId }: Props) {
         }
       });
     }
-  }, [code, canvasKey]);
+  }, [code, canvasKey, canvasId]);
 
   return (
     <div className="flex flex-row h-[80vh]">
@@ -55,7 +55,7 @@ function CanvasWithEditor ({ cacheKey, codePath, canvasId }: Props) {
       <div className="flex flex-col px-[8px] justify-between">
         <canvas
           key={canvasKey}
-          id={'3dCanvas'}
+          id={canvasId}
           width={600}
           height={550}
           className="border border-gray-700 rounded-[8px]"

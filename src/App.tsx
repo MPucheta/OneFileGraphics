@@ -7,6 +7,7 @@ import RouteMap from './constants/routes';
 import CameraInputControl from './components/CameraInputControl';
 import ShaderFractal from './components/ShaderFractal';
 import ModelLoading from './components/ModelLoading';
+import ToyCarLoading from './components/ToyCarLoading';
 
 function App () {
   return (
@@ -18,6 +19,7 @@ function App () {
         <Route path={RouteMap.CAMERA_INPUT_CONTROL} element={<CameraInputControl />} />
         <Route path={RouteMap.SHADER_FRACTAL} element={<ShaderFractal />} />
         <Route path={RouteMap.MODEL_LOADING} element={<ModelLoading />} />
+        <Route path={RouteMap.TOY_CAR_LOADING} element={<ToyCarLoading />} />
       </Routes>
     </HashRouter>
   );

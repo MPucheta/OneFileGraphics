@@ -5,6 +5,7 @@ const RouteMap = {
   CAMERA_INPUT_CONTROL: '/camera-input-control',
   SHADER_FRACTAL: '/shader-fractal',
   MODEL_LOADING: '/model-loading',
+  TOY_CAR_LOADING: '/toy-car-loading',
 }
 
 export default RouteMap;

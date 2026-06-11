@@ -25,7 +25,7 @@ async function executeCode (
       }
     }
 
-    code.replaceAll('3dCanvas', canvasId);
+    code = code.replaceAll('3dCanvas', canvasId);
 
     const transpiled = transform(code, {
       presets: ['typescript', 'env'],
