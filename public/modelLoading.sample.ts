@@ -2,29 +2,29 @@
 
 const degToRad = (d) => (d * Math.PI) / 180;
 
-function setupGUIControls () {
+function setupControls() {
   const controls = {
     rotation: [degToRad(0), -60, degToRad(0)],
     scale: 50,
     lightScale: [0, 0, 0],
-    lightPosition: [50, 100, 50]
+    lightPosition: [50, 100, 50],
   };
 
   const gui = new window.GUI();
 
-  gui.add(controls.rotation, '0', -360, 360).name("object rotation x");
-  gui.add(controls.rotation, '1', -360, 360).name("object rotation y");
-  gui.add(controls.rotation, '2', -360, 360).name("object rotation z");
+  gui.add(controls.rotation, '0', -360, 360).name('object rotation x');
+  gui.add(controls.rotation, '1', -360, 360).name('object rotation y');
+  gui.add(controls.rotation, '2', -360, 360).name('object rotation z');
 
-  gui.add(controls, 'scale', 0, 100).name("object scale");
+  gui.add(controls, 'scale', 0, 100).name('object scale');
 
   return controls;
 }
 
-const controls = setupGUIControls();
+const controls = setupControls();
 
-async function loadGLB () {
-  const uploadedData = (window as any).uploadedGLB;
+async function loadGLB() {
+  const uploadedData = (window as any).uploadedMonkeyGLB;
 
   if (uploadedData) {
     return parseGLB(uploadedData);
@@ -34,7 +34,9 @@ async function loadGLB () {
   const response = await fetch('models/monkey.glb');
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch model: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `Failed to fetch model: ${response.status} ${response.statusText}`
+    );
   }
 
   const arrayBuffer = await response.arrayBuffer();
@@ -44,17 +46,19 @@ async function loadGLB () {
   return parsed;
 }
 
-function parseGLB (data: Uint8Array) {
+function parseGLB(data: Uint8Array) {
   // DataView allows better manipulation of BufferData
   const dataView = new DataView(data.buffer, data.byteOffset, data.byteLength);
-  const GLTX_HEX = 0x46546C67; // 'glTF' x46 = g, x54 = l, ...
-  const JSON_HEX = 0x4E4F534A;
-  const BIN_HEX = 0x004E4942;
+  const GLTX_HEX = 0x46546c67; // 'glTF' x46 = g, x54 = l, ...
+  const JSON_HEX = 0x4e4f534a;
+  const BIN_HEX = 0x004e4942;
 
   const magic = dataView.getUint32(0, true);
 
   if (magic !== GLTX_HEX) {
-    throw new Error(`Invalid GLB magic value (${magic}). Expected 1179937895 (0x46546C67).`);
+    throw new Error(
+      `Invalid GLB magic value (${magic}). Expected 1179937895 (0x46546C67).`
+    );
   }
 
   const offsetToLengthAmount = 8; // 0x46546C67 => 8
@@ -64,7 +68,7 @@ function parseGLB (data: Uint8Array) {
   let jsonChunk = null;
   let binaryChunk = null;
 
-  function chunk (data, dataView, offset) {
+  function chunk(data, dataView, offset) {
     const chunkLength = dataView.getUint32(offset, true); // 4 bytes that tells data length
     const chunkType = dataView.getUint32(offset + 4, true); // 4 bytes of data type either JSONHEX or BINHEX
     const chunkData = data.subarray(offset + 8, offset + 8 + chunkLength); // actual data after headers
@@ -72,8 +76,9 @@ function parseGLB (data: Uint8Array) {
     return { chunkLength, chunkType, chunkData };
   }
 
-  const parseJSONChunk = (chunkData) => JSON.parse(new TextDecoder().decode(chunkData))
-  const parseBinaryChunk = (chunkData) => chunkData // no-op
+  const parseJSONChunk = (chunkData) =>
+    JSON.parse(new TextDecoder().decode(chunkData));
+  const parseBinaryChunk = (chunkData) => chunkData; // no-op
 
   while (offset < totalLength) {
     const { chunkLength, chunkType, chunkData } = chunk(data, dataView, offset);
@@ -92,7 +97,7 @@ function parseGLB (data: Uint8Array) {
   const primitive = mesh.primitives[0];
   const attributes = primitive.attributes;
 
-  function getAccessorData (accessorIndex) {
+  function getAccessorData(accessorIndex) {
     const accessor = jsonChunk.accessors[accessorIndex];
 
     if (!accessor) return null;
@@ -102,36 +107,35 @@ function parseGLB (data: Uint8Array) {
         name: 'FLOAT',
         numberOfBytes: 4,
         dataViewGetterMethod: 'getFloat32',
-        ArrayView: Float32Array
+        ArrayView: Float32Array,
       },
       5123: {
         name: 'UNSIGNED_SHORT',
         numberOfBytes: 2,
         dataViewGetterMethod: 'getUint16',
-        ArrayView: Uint16Array
+        ArrayView: Uint16Array,
       },
       5125: {
         name: 'UNSIGNED_INT',
         numberOfBytes: 4,
         dataViewGetterMethod: 'getUint32',
-        ArrayView: Uint32Array
+        ArrayView: Uint32Array,
       },
       5121: {
         name: 'UNSIGNED_BYTE',
         numberOfBytes: 1,
         dataViewGetterMethod: 'getUint8',
-        ArrayView: Uint8Array
-      }
-    }
-
+        ArrayView: Uint8Array,
+      },
+    };
 
     const bufferView = jsonChunk.bufferViews[accessor.bufferView];
-    const byteOffset = (bufferView.byteOffset || 0) + (accessor.byteOffset || 0);
+    const byteOffset =
+      (bufferView.byteOffset || 0) + (accessor.byteOffset || 0);
     const byteStride = bufferView.byteStride || 0;
     const type = accessor.type;
     const numVertices = accessor.count;
-    const vectorSize = type === 'VEC3' ? 3 : (type === 'VEC2' ? 2 : 1);
-
+    const vectorSize = type === 'VEC3' ? 3 : type === 'VEC2' ? 2 : 1;
 
     // abstraction of the following, with more specs
     // if (componentType === FLOAT) {
@@ -144,14 +148,18 @@ function parseGLB (data: Uint8Array) {
     //   }
     // }
 
-    const SPECS = ChunkHandler[accessor.componentType]
+    const SPECS = ChunkHandler[accessor.componentType];
     const result = new SPECS.ArrayView(numVertices * vectorSize);
 
     // go through all vertices, each vertex may be 1D, 2D or 3D, and have specific number of bytes
     for (let i = 0; i < numVertices; i++) {
-      const itemOffset = byteOffset + i * (byteStride || vectorSize * SPECS.numberOfBytes);
+      const itemOffset =
+        byteOffset + i * (byteStride || vectorSize * SPECS.numberOfBytes);
       for (let j = 0; j < vectorSize; j++) {
-        result[i * vectorSize + j] = dataView[SPECS.dataViewGetterMethod](binaryChunk.byteOffset + itemOffset + j * SPECS.numberOfBytes, true);
+        result[i * vectorSize + j] = dataView[SPECS.dataViewGetterMethod](
+          binaryChunk.byteOffset + itemOffset + j * SPECS.numberOfBytes,
+          true
+        );
       }
     }
 
@@ -161,7 +169,6 @@ function parseGLB (data: Uint8Array) {
   const positions = getAccessorData(attributes.POSITION);
   const normals = getAccessorData(attributes.NORMAL);
   const indices = getAccessorData(primitive.indices);
-
 
   // interleave => [Px, Py, Pz, Nx, Ny, Nz], that is, position and normals are side by side
 
@@ -199,7 +206,7 @@ function parseGLB (data: Uint8Array) {
   }
 }
 
-async function main () {
+async function main() {
   const canvas = document.getElementById('3dCanvas');
 
   const gpu = navigator.gpu;
@@ -322,7 +329,7 @@ async function main () {
 
   device.queue.writeBuffer(vertexBuffer, 0, vertexData);
 
-  function allocMemoryForObject () {
+  function allocMemoryForObject() {
     const objectInfos = [];
 
     const unifromBufferSize = (12 + 16 + 4 + 4) * 4; //world matrix +  world project + color + lightPosition aligned
@@ -349,10 +356,7 @@ async function main () {
       kWorldViewProjectionOffset + 16
     );
 
-    const colorValue = uniformValues.subarray(
-      kColorOffset,
-      kColorOffset + 4
-    );
+    const colorValue = uniformValues.subarray(kColorOffset, kColorOffset + 4);
 
     const lightDirectionValue = uniformValues.subarray(
       kLightDirectionOffset,
@@ -379,7 +383,7 @@ async function main () {
       normalMatrixValue,
       worldViewProjectionValue,
       colorValue,
-      lightDirectionValue
+      lightDirectionValue,
     });
 
     return objectInfos;
@@ -388,7 +392,7 @@ async function main () {
   const objectInfos = allocMemoryForObject();
   const lightInfo = allocMemoryForObject();
 
-  function render () {
+  function render() {
     const encoder = device.createCommandEncoder();
     const texture = context.getCurrentTexture();
 
@@ -423,8 +427,7 @@ async function main () {
     renderPass.setPipeline(pipeline);
     renderPass.setVertexBuffer(0, vertexBuffer); // actual vertex data
 
-
-    function positionCameraLookingAtScene () {
+    function positionCameraLookingAtScene() {
       const eye = [100, 150, 200];
       const target = [0, 35, 0];
       const up = [0, 1, 0];
@@ -433,32 +436,55 @@ async function main () {
         degToRad(60),
         aspect,
         1,
-        2000,
+        2000
       );
 
       const sceneViewMatrix = VectorMath.mat4.lookAt(eye, target, up);
-      const sceneViewProjectionMatrix = VectorMath.mat4.multiply(projection, sceneViewMatrix);
+      const sceneViewProjectionMatrix = VectorMath.mat4.multiply(
+        projection,
+        sceneViewMatrix
+      );
 
       return sceneViewProjectionMatrix;
     }
 
-
-    function positionObjects (sceneViewProjectionMatrix) {
+    function positionObjects(sceneViewProjectionMatrix) {
       for (const objInfo of objectInfos) {
-        const { uniformBuffer, uniformValues, bindGroup, colorValue, lightDirectionValue, normalMatrixValue, worldViewProjectionValue } = objInfo;
+        const {
+          uniformBuffer,
+          uniformValues,
+          bindGroup,
+          colorValue,
+          lightDirectionValue,
+          normalMatrixValue,
+          worldViewProjectionValue,
+        } = objInfo;
 
         const world = VectorMath.mat4.rotationY(controls.rotation[0] * 0.01);
         VectorMath.mat4.rotateX(world, controls.rotation[1] * 0.01, world);
         VectorMath.mat4.rotateZ(world, controls.rotation[2] * 0.01, world);
 
-        VectorMath.mat4.multiply(sceneViewProjectionMatrix, world, worldViewProjectionValue);
-        VectorMath.mat4.scale(worldViewProjectionValue, [controls.scale, controls.scale, controls.scale], worldViewProjectionValue);
+        VectorMath.mat4.multiply(
+          sceneViewProjectionMatrix,
+          world,
+          worldViewProjectionValue
+        );
+        VectorMath.mat4.scale(
+          worldViewProjectionValue,
+          [controls.scale, controls.scale, controls.scale],
+          worldViewProjectionValue
+        );
 
-        VectorMath.mat3.fromMat4(VectorMath.mat4.transpose(VectorMath.mat4.inverse(world)), normalMatrixValue)
+        VectorMath.mat3.fromMat4(
+          VectorMath.mat4.transpose(VectorMath.mat4.inverse(world)),
+          normalMatrixValue
+        );
 
         const GREEN = [0.2, 1, 0.2, 1];
         colorValue.set(GREEN);
-        lightDirectionValue.set(VectorMath.vec3.normalize(controls.lightPosition));
+        lightDirectionValue.set(
+          VectorMath.vec3.normalize(controls.lightPosition)
+        );
 
         device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
         renderPass.setBindGroup(0, bindGroup);
@@ -466,20 +492,43 @@ async function main () {
       }
     }
 
-    function positionLight (sceneViewProjectionMatrix) {
+    function positionLight(sceneViewProjectionMatrix) {
       for (const objInfo of lightInfo) {
-        const { uniformBuffer, uniformValues, bindGroup, colorValue, lightDirectionValue, normalMatrixValue, worldViewProjectionValue } = objInfo;
+        const {
+          uniformBuffer,
+          uniformValues,
+          bindGroup,
+          colorValue,
+          lightDirectionValue,
+          normalMatrixValue,
+          worldViewProjectionValue,
+        } = objInfo;
 
-        const normalMatrix = VectorMath.mat4.translation(controls.lightPosition)
+        const normalMatrix = VectorMath.mat4.translation(
+          controls.lightPosition
+        );
 
-        VectorMath.mat4.multiply(sceneViewProjectionMatrix, normalMatrix, worldViewProjectionValue);
-        VectorMath.mat4.scale(worldViewProjectionValue, controls.lightScale, worldViewProjectionValue);
+        VectorMath.mat4.multiply(
+          sceneViewProjectionMatrix,
+          normalMatrix,
+          worldViewProjectionValue
+        );
+        VectorMath.mat4.scale(
+          worldViewProjectionValue,
+          controls.lightScale,
+          worldViewProjectionValue
+        );
 
-        VectorMath.mat3.fromMat4(VectorMath.mat4.transpose(VectorMath.mat4.inverse(normalMatrix)), normalMatrixValue)
+        VectorMath.mat3.fromMat4(
+          VectorMath.mat4.transpose(VectorMath.mat4.inverse(normalMatrix)),
+          normalMatrixValue
+        );
 
         const WHITE = [1, 1, 1, 0];
         colorValue.set(WHITE);
-        lightDirectionValue.set(VectorMath.vec3.normalize(controls.lightPosition));
+        lightDirectionValue.set(
+          VectorMath.vec3.normalize(controls.lightPosition)
+        );
 
         device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
         renderPass.setBindGroup(0, bindGroup);
@@ -487,7 +536,7 @@ async function main () {
       }
     }
 
-    const scene = positionCameraLookingAtScene()
+    const scene = positionCameraLookingAtScene();
     positionObjects(scene);
     positionLight(scene);
 
@@ -502,21 +551,33 @@ async function main () {
 
 const VectorMath = {
   mat4: {
-    transpose (m, dst) {
+    transpose(m, dst) {
       dst = dst || new Float32Array(16);
 
-      dst[0] = m[0]; dst[1] = m[4]; dst[2] = m[8]; dst[3] = m[12];
-      dst[4] = m[1]; dst[5] = m[5]; dst[6] = m[9]; dst[7] = m[13];
-      dst[8] = m[2]; dst[9] = m[6]; dst[10] = m[10]; dst[11] = m[14];
-      dst[12] = m[3]; dst[13] = m[7]; dst[14] = m[11]; dst[15] = m[15];
+      dst[0] = m[0];
+      dst[1] = m[4];
+      dst[2] = m[8];
+      dst[3] = m[12];
+      dst[4] = m[1];
+      dst[5] = m[5];
+      dst[6] = m[9];
+      dst[7] = m[13];
+      dst[8] = m[2];
+      dst[9] = m[6];
+      dst[10] = m[10];
+      dst[11] = m[14];
+      dst[12] = m[3];
+      dst[13] = m[7];
+      dst[14] = m[11];
+      dst[15] = m[15];
 
       return dst;
     },
-    projection (width, height, depth, dst) {
+    projection(width, height, depth, dst) {
       return VectorMath.mat4.ortho(0, width, height, 0, depth, -depth, dst);
     },
 
-    perspective (fieldOfViewYInRadians, aspect, zNear, zFar, dst) {
+    perspective(fieldOfViewYInRadians, aspect, zNear, zFar, dst) {
       dst = dst || new Float32Array(16);
 
       const f = Math.tan(Math.PI * 0.5 - 0.5 * fieldOfViewYInRadians);
@@ -545,7 +606,7 @@ const VectorMath = {
       return dst;
     },
 
-    ortho (left, right, bottom, top, near, far, dst) {
+    ortho(left, right, bottom, top, near, far, dst) {
       dst = dst || new Float32Array(16);
 
       dst[0] = 2 / (right - left);
@@ -571,16 +632,28 @@ const VectorMath = {
       return dst;
     },
 
-    identity (dst) {
+    identity(dst) {
       dst = dst || new Float32Array(16);
-      dst[0] = 1; dst[1] = 0; dst[2] = 0; dst[3] = 0;
-      dst[4] = 0; dst[5] = 1; dst[6] = 0; dst[7] = 0;
-      dst[8] = 0; dst[9] = 0; dst[10] = 1; dst[11] = 0;
-      dst[12] = 0; dst[13] = 0; dst[14] = 0; dst[15] = 1;
+      dst[0] = 1;
+      dst[1] = 0;
+      dst[2] = 0;
+      dst[3] = 0;
+      dst[4] = 0;
+      dst[5] = 1;
+      dst[6] = 0;
+      dst[7] = 0;
+      dst[8] = 0;
+      dst[9] = 0;
+      dst[10] = 1;
+      dst[11] = 0;
+      dst[12] = 0;
+      dst[13] = 0;
+      dst[14] = 0;
+      dst[15] = 1;
       return dst;
     },
 
-    multiply (a, b, dst) {
+    multiply(a, b, dst) {
       dst = dst || new Float32Array(16);
       const b00 = b[0 * 4 + 0];
       const b01 = b[0 * 4 + 1];
@@ -638,7 +711,7 @@ const VectorMath = {
       return dst;
     },
 
-    inverse (m, dst) {
+    inverse(m, dst) {
       dst = dst || new Float32Array(16);
 
       const m00 = m[0 * 4 + 0];
@@ -683,13 +756,25 @@ const VectorMath = {
       const tmp22 = m00 * m11;
       const tmp23 = m10 * m01;
 
-      const t0 = (tmp0 * m11 + tmp3 * m21 + tmp4 * m31) -
+      const t0 =
+        tmp0 * m11 +
+        tmp3 * m21 +
+        tmp4 * m31 -
         (tmp1 * m11 + tmp2 * m21 + tmp5 * m31);
-      const t1 = (tmp1 * m01 + tmp6 * m21 + tmp9 * m31) -
+      const t1 =
+        tmp1 * m01 +
+        tmp6 * m21 +
+        tmp9 * m31 -
         (tmp0 * m01 + tmp7 * m21 + tmp8 * m31);
-      const t2 = (tmp2 * m01 + tmp7 * m11 + tmp10 * m31) -
+      const t2 =
+        tmp2 * m01 +
+        tmp7 * m11 +
+        tmp10 * m31 -
         (tmp3 * m01 + tmp6 * m11 + tmp11 * m31);
-      const t3 = (tmp5 * m01 + tmp8 * m11 + tmp11 * m21) -
+      const t3 =
+        tmp5 * m01 +
+        tmp8 * m11 +
+        tmp11 * m21 -
         (tmp4 * m01 + tmp9 * m11 + tmp10 * m21);
 
       const d = 1 / (m00 * t0 + m10 * t1 + m20 * t2 + m30 * t3);
@@ -699,138 +784,287 @@ const VectorMath = {
       dst[2] = d * t2;
       dst[3] = d * t3;
 
-      dst[4] = d * ((tmp1 * m10 + tmp2 * m20 + tmp5 * m30) -
-        (tmp0 * m10 + tmp3 * m20 + tmp4 * m30));
-      dst[5] = d * ((tmp0 * m00 + tmp7 * m20 + tmp8 * m30) -
-        (tmp1 * m00 + tmp6 * m20 + tmp9 * m30));
-      dst[6] = d * ((tmp3 * m00 + tmp6 * m10 + tmp11 * m30) -
-        (tmp2 * m00 + tmp7 * m10 + tmp10 * m30));
-      dst[7] = d * ((tmp4 * m00 + tmp9 * m10 + tmp10 * m20) -
-        (tmp5 * m00 + tmp8 * m10 + tmp11 * m20));
+      dst[4] =
+        d *
+        (tmp1 * m10 +
+          tmp2 * m20 +
+          tmp5 * m30 -
+          (tmp0 * m10 + tmp3 * m20 + tmp4 * m30));
+      dst[5] =
+        d *
+        (tmp0 * m00 +
+          tmp7 * m20 +
+          tmp8 * m30 -
+          (tmp1 * m00 + tmp6 * m20 + tmp9 * m30));
+      dst[6] =
+        d *
+        (tmp3 * m00 +
+          tmp6 * m10 +
+          tmp11 * m30 -
+          (tmp2 * m00 + tmp7 * m10 + tmp10 * m30));
+      dst[7] =
+        d *
+        (tmp4 * m00 +
+          tmp9 * m10 +
+          tmp10 * m20 -
+          (tmp5 * m00 + tmp8 * m10 + tmp11 * m20));
 
-      dst[8] = d * ((tmp12 * m13 + tmp15 * m23 + tmp16 * m33) -
-        (tmp13 * m13 + tmp14 * m23 + tmp17 * m33));
-      dst[9] = d * ((tmp13 * m03 + tmp18 * m23 + tmp21 * m33) -
-        (tmp12 * m03 + tmp19 * m23 + tmp20 * m33));
-      dst[10] = d * ((tmp14 * m03 + tmp19 * m13 + tmp22 * m33) -
-        (tmp15 * m03 + tmp18 * m13 + tmp23 * m33));
-      dst[11] = d * ((tmp17 * m03 + tmp20 * m13 + tmp23 * m23) -
-        (tmp16 * m03 + tmp21 * m13 + tmp22 * m23));
+      dst[8] =
+        d *
+        (tmp12 * m13 +
+          tmp15 * m23 +
+          tmp16 * m33 -
+          (tmp13 * m13 + tmp14 * m23 + tmp17 * m33));
+      dst[9] =
+        d *
+        (tmp13 * m03 +
+          tmp18 * m23 +
+          tmp21 * m33 -
+          (tmp12 * m03 + tmp19 * m23 + tmp20 * m33));
+      dst[10] =
+        d *
+        (tmp14 * m03 +
+          tmp19 * m13 +
+          tmp22 * m33 -
+          (tmp15 * m03 + tmp18 * m13 + tmp23 * m33));
+      dst[11] =
+        d *
+        (tmp17 * m03 +
+          tmp20 * m13 +
+          tmp23 * m23 -
+          (tmp16 * m03 + tmp21 * m13 + tmp22 * m23));
 
-      dst[12] = d * ((tmp14 * m22 + tmp17 * m32 + tmp13 * m12) -
-        (tmp16 * m32 + tmp12 * m12 + tmp15 * m22));
-      dst[13] = d * ((tmp20 * m32 + tmp12 * m02 + tmp19 * m22) -
-        (tmp18 * m22 + tmp21 * m32 + tmp13 * m02));
-      dst[14] = d * ((tmp18 * m12 + tmp23 * m32 + tmp15 * m02) -
-        (tmp22 * m32 + tmp14 * m02 + tmp19 * m12));
-      dst[15] = d * ((tmp22 * m22 + tmp16 * m02 + tmp21 * m12) -
-        (tmp20 * m12 + tmp23 * m22 + tmp17 * m02));
+      dst[12] =
+        d *
+        (tmp14 * m22 +
+          tmp17 * m32 +
+          tmp13 * m12 -
+          (tmp16 * m32 + tmp12 * m12 + tmp15 * m22));
+      dst[13] =
+        d *
+        (tmp20 * m32 +
+          tmp12 * m02 +
+          tmp19 * m22 -
+          (tmp18 * m22 + tmp21 * m32 + tmp13 * m02));
+      dst[14] =
+        d *
+        (tmp18 * m12 +
+          tmp23 * m32 +
+          tmp15 * m02 -
+          (tmp22 * m32 + tmp14 * m02 + tmp19 * m12));
+      dst[15] =
+        d *
+        (tmp22 * m22 +
+          tmp16 * m02 +
+          tmp21 * m12 -
+          (tmp20 * m12 + tmp23 * m22 + tmp17 * m02));
       return dst;
     },
 
-    cameraAim (eye, target, up, dst) {
+    cameraAim(eye, target, up, dst) {
       dst = dst || new Float32Array(16);
 
-      const zAxis = VectorMath.vec3.normalize(VectorMath.vec3.subtract(eye, target));
+      const zAxis = VectorMath.vec3.normalize(
+        VectorMath.vec3.subtract(eye, target)
+      );
       const xAxis = VectorMath.vec3.normalize(VectorMath.vec3.cross(up, zAxis));
-      const yAxis = VectorMath.vec3.normalize(VectorMath.vec3.cross(zAxis, xAxis));
+      const yAxis = VectorMath.vec3.normalize(
+        VectorMath.vec3.cross(zAxis, xAxis)
+      );
 
-      dst[0] = xAxis[0]; dst[1] = xAxis[1]; dst[2] = xAxis[2]; dst[3] = 0;
-      dst[4] = yAxis[0]; dst[5] = yAxis[1]; dst[6] = yAxis[2]; dst[7] = 0;
-      dst[8] = zAxis[0]; dst[9] = zAxis[1]; dst[10] = zAxis[2]; dst[11] = 0;
-      dst[12] = eye[0]; dst[13] = eye[1]; dst[14] = eye[2]; dst[15] = 1;
+      dst[0] = xAxis[0];
+      dst[1] = xAxis[1];
+      dst[2] = xAxis[2];
+      dst[3] = 0;
+      dst[4] = yAxis[0];
+      dst[5] = yAxis[1];
+      dst[6] = yAxis[2];
+      dst[7] = 0;
+      dst[8] = zAxis[0];
+      dst[9] = zAxis[1];
+      dst[10] = zAxis[2];
+      dst[11] = 0;
+      dst[12] = eye[0];
+      dst[13] = eye[1];
+      dst[14] = eye[2];
+      dst[15] = 1;
 
       return dst;
     },
 
-    lookAt (eye, target, up, dst) {
-      return VectorMath.mat4.inverse(VectorMath.mat4.cameraAim(eye, target, up, dst), dst);
+    lookAt(eye, target, up, dst) {
+      return VectorMath.mat4.inverse(
+        VectorMath.mat4.cameraAim(eye, target, up, dst),
+        dst
+      );
     },
 
-    translation ([tx, ty, tz], dst) {
+    translation([tx, ty, tz], dst) {
       dst = dst || new Float32Array(16);
-      dst[0] = 1; dst[1] = 0; dst[2] = 0; dst[3] = 0;
-      dst[4] = 0; dst[5] = 1; dst[6] = 0; dst[7] = 0;
-      dst[8] = 0; dst[9] = 0; dst[10] = 1; dst[11] = 0;
-      dst[12] = tx; dst[13] = ty; dst[14] = tz; dst[15] = 1;
+      dst[0] = 1;
+      dst[1] = 0;
+      dst[2] = 0;
+      dst[3] = 0;
+      dst[4] = 0;
+      dst[5] = 1;
+      dst[6] = 0;
+      dst[7] = 0;
+      dst[8] = 0;
+      dst[9] = 0;
+      dst[10] = 1;
+      dst[11] = 0;
+      dst[12] = tx;
+      dst[13] = ty;
+      dst[14] = tz;
+      dst[15] = 1;
       return dst;
     },
 
-    rotationX (angleInRadians, dst) {
+    rotationX(angleInRadians, dst) {
       const c = Math.cos(angleInRadians);
       const s = Math.sin(angleInRadians);
       dst = dst || new Float32Array(16);
-      dst[0] = 1; dst[1] = 0; dst[2] = 0; dst[3] = 0;
-      dst[4] = 0; dst[5] = c; dst[6] = s; dst[7] = 0;
-      dst[8] = 0; dst[9] = -s; dst[10] = c; dst[11] = 0;
-      dst[12] = 0; dst[13] = 0; dst[14] = 0; dst[15] = 1;
+      dst[0] = 1;
+      dst[1] = 0;
+      dst[2] = 0;
+      dst[3] = 0;
+      dst[4] = 0;
+      dst[5] = c;
+      dst[6] = s;
+      dst[7] = 0;
+      dst[8] = 0;
+      dst[9] = -s;
+      dst[10] = c;
+      dst[11] = 0;
+      dst[12] = 0;
+      dst[13] = 0;
+      dst[14] = 0;
+      dst[15] = 1;
       return dst;
     },
 
-    rotationY (angleInRadians, dst) {
+    rotationY(angleInRadians, dst) {
       const c = Math.cos(angleInRadians);
       const s = Math.sin(angleInRadians);
       dst = dst || new Float32Array(16);
-      dst[0] = c; dst[1] = 0; dst[2] = -s; dst[3] = 0;
-      dst[4] = 0; dst[5] = 1; dst[6] = 0; dst[7] = 0;
-      dst[8] = s; dst[9] = 0; dst[10] = c; dst[11] = 0;
-      dst[12] = 0; dst[13] = 0; dst[14] = 0; dst[15] = 1;
+      dst[0] = c;
+      dst[1] = 0;
+      dst[2] = -s;
+      dst[3] = 0;
+      dst[4] = 0;
+      dst[5] = 1;
+      dst[6] = 0;
+      dst[7] = 0;
+      dst[8] = s;
+      dst[9] = 0;
+      dst[10] = c;
+      dst[11] = 0;
+      dst[12] = 0;
+      dst[13] = 0;
+      dst[14] = 0;
+      dst[15] = 1;
       return dst;
     },
 
-    rotationZ (angleInRadians, dst) {
+    rotationZ(angleInRadians, dst) {
       const c = Math.cos(angleInRadians);
       const s = Math.sin(angleInRadians);
       dst = dst || new Float32Array(16);
-      dst[0] = c; dst[1] = s; dst[2] = 0; dst[3] = 0;
-      dst[4] = -s; dst[5] = c; dst[6] = 0; dst[7] = 0;
-      dst[8] = 0; dst[9] = 0; dst[10] = 1; dst[11] = 0;
-      dst[12] = 0; dst[13] = 0; dst[14] = 0; dst[15] = 1;
+      dst[0] = c;
+      dst[1] = s;
+      dst[2] = 0;
+      dst[3] = 0;
+      dst[4] = -s;
+      dst[5] = c;
+      dst[6] = 0;
+      dst[7] = 0;
+      dst[8] = 0;
+      dst[9] = 0;
+      dst[10] = 1;
+      dst[11] = 0;
+      dst[12] = 0;
+      dst[13] = 0;
+      dst[14] = 0;
+      dst[15] = 1;
       return dst;
     },
 
-    scaling ([sx, sy, sz], dst) {
+    scaling([sx, sy, sz], dst) {
       dst = dst || new Float32Array(16);
-      dst[0] = sx; dst[1] = 0; dst[2] = 0; dst[3] = 0;
-      dst[4] = 0; dst[5] = sy; dst[6] = 0; dst[7] = 0;
-      dst[8] = 0; dst[9] = 0; dst[10] = sz; dst[11] = 0;
-      dst[12] = 0; dst[13] = 0; dst[14] = 0; dst[15] = 1;
+      dst[0] = sx;
+      dst[1] = 0;
+      dst[2] = 0;
+      dst[3] = 0;
+      dst[4] = 0;
+      dst[5] = sy;
+      dst[6] = 0;
+      dst[7] = 0;
+      dst[8] = 0;
+      dst[9] = 0;
+      dst[10] = sz;
+      dst[11] = 0;
+      dst[12] = 0;
+      dst[13] = 0;
+      dst[14] = 0;
+      dst[15] = 1;
       return dst;
     },
 
-    translate (m, translation, dst) {
-      return VectorMath.mat4.multiply(m, VectorMath.mat4.translation(translation), dst);
+    translate(m, translation, dst) {
+      return VectorMath.mat4.multiply(
+        m,
+        VectorMath.mat4.translation(translation),
+        dst
+      );
     },
 
-    rotateX (m, angleInRadians, dst) {
-      return VectorMath.mat4.multiply(m, VectorMath.mat4.rotationX(angleInRadians), dst);
+    rotateX(m, angleInRadians, dst) {
+      return VectorMath.mat4.multiply(
+        m,
+        VectorMath.mat4.rotationX(angleInRadians),
+        dst
+      );
     },
 
-    rotateY (m, angleInRadians, dst) {
-      return VectorMath.mat4.multiply(m, VectorMath.mat4.rotationY(angleInRadians), dst);
+    rotateY(m, angleInRadians, dst) {
+      return VectorMath.mat4.multiply(
+        m,
+        VectorMath.mat4.rotationY(angleInRadians),
+        dst
+      );
     },
 
-    rotateZ (m, angleInRadians, dst) {
-      return VectorMath.mat4.multiply(m, VectorMath.mat4.rotationZ(angleInRadians), dst);
+    rotateZ(m, angleInRadians, dst) {
+      return VectorMath.mat4.multiply(
+        m,
+        VectorMath.mat4.rotationZ(angleInRadians),
+        dst
+      );
     },
 
-    scale (m, scale, dst) {
+    scale(m, scale, dst) {
       return VectorMath.mat4.multiply(m, VectorMath.mat4.scaling(scale), dst);
     },
   },
   mat3: {
-    fromMat4 (m, dst) {
+    fromMat4(m, dst) {
       dst = dst || new Float32Array(12);
 
-      dst[0] = m[0]; dst[1] = m[1]; dst[2] = m[2];
-      dst[4] = m[4]; dst[5] = m[5]; dst[6] = m[6];
-      dst[8] = m[8]; dst[9] = m[9]; dst[10] = m[10];
+      dst[0] = m[0];
+      dst[1] = m[1];
+      dst[2] = m[2];
+      dst[4] = m[4];
+      dst[5] = m[5];
+      dst[6] = m[6];
+      dst[8] = m[8];
+      dst[9] = m[9];
+      dst[10] = m[10];
 
       return dst;
     },
   },
   vec3: {
-    cross (a, b, dst) {
+    cross(a, b, dst) {
       dst = dst || new Float32Array(3);
 
       const t0 = a[1] * b[2] - a[2] * b[1];
@@ -844,7 +1078,7 @@ const VectorMath = {
       return dst;
     },
 
-    subtract (a, b, dst) {
+    subtract(a, b, dst) {
       dst = dst || new Float32Array(3);
 
       dst[0] = a[0] - b[0];
@@ -854,7 +1088,7 @@ const VectorMath = {
       return dst;
     },
 
-    normalize (v, dst) {
+    normalize(v, dst) {
       dst = dst || new Float32Array(3);
 
       const length = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
@@ -871,14 +1105,13 @@ const VectorMath = {
 
       return dst;
     },
-  }
-}
+  },
+};
 
-function assert (element: any) {
+function assert(element: any) {
   if (!element) {
     throw new Error('Required element not found');
   }
 }
-
 
 main();

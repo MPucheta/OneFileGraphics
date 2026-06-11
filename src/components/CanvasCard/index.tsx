@@ -12,7 +12,7 @@ type Props = {
   codePath: string;
 };
 
-export default function CanvasCard ({
+export default function CanvasCard({
   title,
   description,
   image,
@@ -31,7 +31,7 @@ export default function CanvasCard ({
         if (!initialized.current) {
           initialized.current = true;
           executeCode(code, false, canvasId)
-            .then(() => { })
+            .then(() => {})
             .catch((err) => console.error(err));
         }
       });
@@ -41,7 +41,7 @@ export default function CanvasCard ({
   return (
     <div
       onClick={onClick}
-      className="group cursor-pointer overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900 transition-all hover:border-zinc-700"
+      className="group cursor-pointer overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900 transition-all hover:border-zinc-700 max-w-[350px]"
     >
       <div className="relative aspect-video w-[350px] overflow-hidden bg-zinc-950">
         {image ? (
@@ -53,7 +53,7 @@ export default function CanvasCard ({
             />
             <div className="relative group-hover:block">
               <canvas
-                id={'3dCanvas'}
+                id={canvasId}
                 width="350px"
                 height="200px"
                 className="hidden object-cover group-hover:block"

@@ -1,11 +1,20 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import RouteMap from '../../constants/routes';
 import assetPath from '../../utils/assetPath';
 import SampleCard from '../SampleCard';
 import CanvasCard from '../CanvasCard';
 
-function Dashboard () {
+function Dashboard() {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    //cleanup the controls that appear from canvas cards
+    document.querySelectorAll('muigui-element').forEach((el) => el.remove());
+    return () => {
+      document.querySelectorAll('muigui-element').forEach((el) => el.remove());
+    };
+  }, []);
 
   return (
     <>
@@ -15,50 +24,62 @@ function Dashboard () {
             OneFile <span className="text-indigo-500">Graphics</span>
           </h1>
           <p className="text-lg text-gray-400 leading-relaxed max-w-2xl mx-auto mb-4">
-            A collection of 3D samples where each file contains entire rendering pipelines.
+            A collection of 3D samples where each file contains entire rendering
+            pipelines.
           </p>
           <p className="text-gray-500 text-sm max-w-3xl mx-auto italic">
-            Each file contains all math, buffers and shaders to showcase specific 3D techniques, to understand from scratch how something ends up in the screen.
+            Each file contains all math, buffers and shaders to showcase
+            specific 3D techniques, to understand from scratch how something
+            ends up in the screen.
           </p>
         </div>
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 p-[24px]">
         <SampleCard
           title="Matrix Transformation & Perspective"
-          description="Matrix Transformation"
+          description="Vertices and math"
           image={assetPath('samplePreview/f.jpg')}
           video={assetPath('samplePreview/f.mp4')}
           onClick={() => navigate(RouteMap.F_MATRIX_PERSPECTIVE)}
         />
         <SampleCard
           title="Directional Light"
-          description="Directional Light"
+          description="Lightning calculations in shaders"
           image={assetPath('samplePreview/cube-directional-light.jpg')}
           video={assetPath('samplePreview/cube-directional-light.mp4')}
           onClick={() => navigate(RouteMap.CUBE_DIRECTIONAL_LIGHT)}
         />
         <SampleCard
           title="Camera Input Control"
-          description="Camera Input Control"
+          description="FPS projection, perspective, inputs"
           image={assetPath('samplePreview/camera-input-control.jpg')}
           video={assetPath('samplePreview/camera-input-control.mp4')}
           onClick={() => navigate(RouteMap.CAMERA_INPUT_CONTROL)}
         />
         <CanvasCard
           title="Shader Fractal"
-          description="Shader Fractal"
+          description="Shader math does not make sense"
           image={assetPath('samplePreview/shader-fractal.jpg')}
           onClick={() => navigate(RouteMap.SHADER_FRACTAL)}
-          cacheKey='shader-fractal-cache-key'
+          cacheKey="shader-fractal-cache-key"
           codePath={assetPath('shaderFractal.sample.ts')}
-          canvasId='shaderFractal'
+          canvasId="shaderFractal"
         />
         <SampleCard
           title="Model Loading"
-          description="Model Loading"
+          description="Loading bare geometry from GLB"
           image={assetPath('samplePreview/model-loading.jpg')}
           video={assetPath('samplePreview/model-loading.mp4')}
           onClick={() => navigate(RouteMap.MODEL_LOADING)}
+        />
+        <CanvasCard
+          title="Textured Model"
+          description="Load textures from inside GLB"
+          onClick={() => navigate(RouteMap.TOY_CAR_LOADING)}
+          image={assetPath('samplePreview/toy-car-loading.jpg')}
+          cacheKey="toy-car-loading-preview-cache-key"
+          codePath={assetPath('samplePreview/toyCarLoading.sample.preview.ts')}
+          canvasId="toyCarLoading"
         />
       </div>
     </>

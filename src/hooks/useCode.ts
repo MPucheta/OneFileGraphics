@@ -1,14 +1,18 @@
-import { useCallback, useEffect, useState } from "react";
-import { isDev } from "../featureFlag/isDEV";
-
+import { useCallback, useEffect, useState } from 'react';
+import { isDev } from '../featureFlag/isDEV';
 
 const useCode = (cacheKey: string, filePath: string) => {
-  const [code, setCodeLocal] = useState(() => localStorage.getItem(cacheKey) || '');
+  const [code, setCodeLocal] = useState(
+    () => localStorage.getItem(cacheKey) || ''
+  );
 
-  const setCode = useCallback((code: string) => {
-    localStorage.setItem(cacheKey, code);
-    setCodeLocal(code);
-  }, [cacheKey]);
+  const setCode = useCallback(
+    (code: string) => {
+      localStorage.setItem(cacheKey, code);
+      setCodeLocal(code);
+    },
+    [cacheKey]
+  );
 
   useEffect(() => {
     const existingCode = !isDev ? localStorage.getItem(cacheKey) : null;
@@ -35,7 +39,7 @@ const useCode = (cacheKey: string, filePath: string) => {
   return {
     code,
     setCode,
-  }
-}
+  };
+};
 
 export default useCode;

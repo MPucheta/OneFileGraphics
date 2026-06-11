@@ -5,7 +5,7 @@ export default function SampleCard ({ title, description, image, video, onClick 
   return (
     <div
       onClick={onClick}
-      className="group cursor-pointer overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900 transition-all hover:border-zinc-700"
+      className="group cursor-pointer overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900 transition-all hover:border-zinc-700 max-w-[350px]"
     >
       <div className="relative aspect-video w-[350px] overflow-hidden bg-zinc-950">
         {image ? (
